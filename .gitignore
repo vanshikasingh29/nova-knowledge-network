@@ -1,0 +1,89 @@
+# Dependencies
+
+node_modules/
+.pnpm-store/
+
+
+# Environment Variables
+
+.env
+.env.local
+.env.development
+.env.production
+
+
+# Build Output
+
+dist/
+build/
+.next/
+
+
+# Logs
+
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+
+# Database
+
+*.sqlite
+*.db
+
+
+# IDE
+
+.vscode/
+.idea/
+
+
+# Operating System
+
+.DS_Store
+Thumbs.db
+
+
+# Testing
+
+coverage/
+
+
+# Temporary Files
+
+tmp/
+temp/
+
+
+# Uploads
+
+uploads/
+storage/
+
+
+# Docker
+
+docker-compose.override.yml
+
+
+# Python (future AI services)
+
+__pycache__/
+*.pyc
+.venv/
+
+
+# Neo4j
+
+neo4j/data/
+neo4j/logs/
+neo4j/import/
+
+
+# Secrets
+
+*.pem
+*.key
+*.secret
