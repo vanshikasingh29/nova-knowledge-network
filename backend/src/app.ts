@@ -9,6 +9,7 @@ import expertRoutes from "./routes/expert.routes";
 import contributionRoutes from "./routes/contribution.routes";
 import categoryRoutes from "./routes/category.routes";
 import tagRoutes from "./routes/tag.routes";
+import discoveryRoutes from "./routes/discovery.routes";
 
 
 const app = express();
@@ -42,6 +43,9 @@ app.use("/api/categories", categoryRoutes);
 
 
 app.use("/api/tags", tagRoutes);
+
+
+app.use("/api/discovery", discoveryRoutes);
 
 
 app.get("/", (req, res) => {

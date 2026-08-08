@@ -15,11 +15,9 @@ export async function createContribution(
     try {
 
         if (!req.userId) {
-
             return res.status(401).json({
                 message: "Authentication required"
             });
-
         }
 
 
@@ -27,7 +25,9 @@ export async function createContribution(
             title,
             topic,
             experience,
-            lesson
+            lesson,
+            categoryId,
+            tagIds
         } = req.body;
 
 
@@ -46,6 +46,27 @@ export async function createContribution(
         }
 
 
+        if (categoryId) {
+
+            const category =
+                await prisma.knowledgeCategory.findUnique({
+                    where: {
+                        id: categoryId
+                    }
+                });
+
+
+            if (!category) {
+
+                return res.status(404).json({
+                    message: "Category not found"
+                });
+
+            }
+
+        }
+
+
         const contribution =
             await prisma.knowledgeContribution.create({
 
@@ -59,7 +80,53 @@ export async function createContribution(
 
                     lesson,
 
-                    authorId: req.userId
+                    authorId: req.userId,
+
+                    categoryId:
+                        categoryId || null,
+
+                    tags: {
+
+                        create:
+                            Array.isArray(tagIds)
+                                ? tagIds.map(
+                                    (tagId: string) => ({
+                                        tag: {
+                                            connect: {
+                                                id: tagId
+                                            }
+                                        }
+                                    })
+                                )
+                                : []
+
+                    }
+
+                },
+
+                include: {
+
+                    category: true,
+
+                    tags: {
+
+                        include: {
+                            tag: true
+                        }
+
+                    },
+
+                    author: {
+
+                        select: {
+
+                            id: true,
+
+                            name: true
+
+                        }
+
+                    }
 
                 }
 
@@ -104,11 +171,31 @@ export async function getMyContributions(
             await prisma.knowledgeContribution.findMany({
 
                 where: {
-                    authorId: req.userId
+
+                    authorId:
+                        req.userId
+
                 },
 
                 orderBy: {
-                    createdAt: "desc"
+
+                    createdAt:
+                        "desc"
+
+                },
+
+                include: {
+
+                    category: true,
+
+                    tags: {
+
+                        include: {
+                            tag: true
+                        }
+
+                    }
+
                 }
 
             });
@@ -132,7 +219,218 @@ export async function getMyContributions(
 }
 
 
-export async function getContribution(
+export async function searchContributions(
+    req: AuthenticatedRequest,
+    res: Response
+) {
+
+    try {
+
+        const search =
+            typeof req.query.search === "string"
+                ? req.query.search.trim()
+                : "";
+
+
+        const category =
+            typeof req.query.category === "string"
+                ? req.query.category.trim()
+                : "";
+
+
+        const tag =
+            typeof req.query.tag === "string"
+                ? req.query.tag.trim().toLowerCase()
+                : "";
+
+
+        const contributions =
+            await prisma.knowledgeContribution.findMany({
+
+                where: {
+
+                    status: "PUBLISHED",
+
+                    AND: [
+
+                        search
+                            ? {
+
+                                OR: [
+
+                                    {
+                                        title: {
+                                            contains:
+                                                search,
+                                            mode:
+                                                "insensitive"
+                                        }
+                                    },
+
+                                    {
+                                        topic: {
+                                            contains:
+                                                search,
+                                            mode:
+                                                "insensitive"
+                                        }
+                                    },
+
+                                    {
+                                        experience: {
+                                            contains:
+                                                search,
+                                            mode:
+                                                "insensitive"
+                                        }
+                                    },
+
+                                    {
+                                        lesson: {
+                                            contains:
+                                                search,
+                                            mode:
+                                                "insensitive"
+                                        }
+                                    }
+
+                                ]
+
+                            }
+                            : {},
+
+
+                        category
+                            ? {
+
+                                category: {
+
+                                    name: {
+
+                                        equals:
+                                            category,
+
+                                        mode:
+                                            "insensitive"
+
+                                    }
+
+                                }
+
+                            }
+                            : {},
+
+
+                        tag
+                            ? {
+
+                                tags: {
+
+                                    some: {
+
+                                        tag: {
+
+                                            name: {
+
+                                                equals:
+                                                    tag,
+
+                                                mode:
+                                                    "insensitive"
+
+                                            }
+
+                                        }
+
+                                    }
+
+                                }
+
+                            }
+                            : {}
+
+                    ]
+
+                },
+
+                orderBy: {
+
+                    createdAt:
+                        "desc"
+
+                },
+
+                include: {
+
+                    category: true,
+
+                    tags: {
+
+                        include: {
+                            tag: true
+                        }
+
+                    },
+
+                    author: {
+
+                        select: {
+
+                            id: true,
+
+                            name: true,
+
+                            expertProfile: {
+
+                                select: {
+
+                                    field: true,
+
+                                    yearsExperience:
+                                        true,
+
+                                    organisation:
+                                        true
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            });
+
+
+        return res.status(200).json({
+
+            count:
+                contributions.length,
+
+            contributions
+
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        return res.status(500).json({
+
+            message:
+                "Unable to search knowledge"
+
+        });
+
+    }
+
+}
+
+
+export async function publishContribution(
     req: AuthenticatedRequest,
     res: Response
 ) {
@@ -142,38 +440,65 @@ export async function getContribution(
         if (!req.userId) {
 
             return res.status(401).json({
-                message: "Authentication required"
+                message:
+                    "Authentication required"
             });
 
         }
 
 
-        const contribution =
+        const existing =
             await prisma.knowledgeContribution.findFirst({
 
                 where: {
 
-                    id: req.params.id,
+                    id:
+                        req.params.id,
 
-                    authorId: req.userId
+                    authorId:
+                        req.userId
 
                 }
 
             });
 
 
-        if (!contribution) {
+        if (!existing) {
 
             return res.status(404).json({
+
                 message:
                     "Knowledge contribution not found"
+
             });
 
         }
 
 
+        const contribution =
+            await prisma.knowledgeContribution.update({
+
+                where: {
+
+                    id:
+                        existing.id
+
+                },
+
+                data: {
+
+                    status:
+                        "PUBLISHED"
+
+                }
+
+            });
+
+
         return res.status(200).json({
+
             contribution
+
         });
 
     } catch (error) {
@@ -181,8 +506,95 @@ export async function getContribution(
         console.error(error);
 
         return res.status(500).json({
+
+            message:
+                "Unable to publish contribution"
+
+        });
+
+    }
+
+}
+
+
+export async function getContribution(
+    req: AuthenticatedRequest,
+    res: Response
+) {
+
+    try {
+
+        const contribution =
+            await prisma.knowledgeContribution.findUnique({
+
+                where: {
+
+                    id:
+                        req.params.id
+
+                },
+
+                include: {
+
+                    category: true,
+
+                    tags: {
+
+                        include: {
+                            tag: true
+                        }
+
+                    },
+
+                    author: {
+
+                        select: {
+
+                            id: true,
+
+                            name: true,
+
+                            expertProfile: true
+
+                        }
+
+                    }
+
+                }
+
+            });
+
+
+        if (
+            !contribution ||
+            contribution.status !== "PUBLISHED"
+        ) {
+
+            return res.status(404).json({
+
+                message:
+                    "Knowledge contribution not found"
+
+            });
+
+        }
+
+
+        return res.status(200).json({
+
+            contribution
+
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        return res.status(500).json({
+
             message:
                 "Unable to retrieve contribution"
+
         });
 
     }
@@ -200,41 +612,51 @@ export async function updateContribution(
         if (!req.userId) {
 
             return res.status(401).json({
-                message: "Authentication required"
+
+                message:
+                    "Authentication required"
+
             });
 
         }
 
 
-        const existingContribution =
+        const existing =
             await prisma.knowledgeContribution.findFirst({
 
                 where: {
 
-                    id: req.params.id,
+                    id:
+                        req.params.id,
 
-                    authorId: req.userId
+                    authorId:
+                        req.userId
 
                 }
 
             });
 
 
-        if (!existingContribution) {
+        if (!existing) {
 
             return res.status(404).json({
+
                 message:
                     "Knowledge contribution not found"
+
             });
 
         }
 
 
         const {
+
             title,
             topic,
             experience,
-            lesson
+            lesson,
+            categoryId
+
         } = req.body;
 
 
@@ -242,7 +664,10 @@ export async function updateContribution(
             await prisma.knowledgeContribution.update({
 
                 where: {
-                    id: existingContribution.id
+
+                    id:
+                        existing.id
+
                 },
 
                 data: {
@@ -261,6 +686,11 @@ export async function updateContribution(
 
                     ...(lesson !== undefined && {
                         lesson
+                    }),
+
+                    ...(categoryId !== undefined && {
+                        categoryId:
+                            categoryId || null
                     })
 
                 }
@@ -269,7 +699,9 @@ export async function updateContribution(
 
 
         return res.status(200).json({
+
             contribution
+
         });
 
     } catch (error) {
@@ -277,8 +709,10 @@ export async function updateContribution(
         console.error(error);
 
         return res.status(500).json({
+
             message:
                 "Unable to update contribution"
+
         });
 
     }
@@ -296,31 +730,38 @@ export async function deleteContribution(
         if (!req.userId) {
 
             return res.status(401).json({
-                message: "Authentication required"
+
+                message:
+                    "Authentication required"
+
             });
 
         }
 
 
-        const existingContribution =
+        const existing =
             await prisma.knowledgeContribution.findFirst({
 
                 where: {
 
-                    id: req.params.id,
+                    id:
+                        req.params.id,
 
-                    authorId: req.userId
+                    authorId:
+                        req.userId
 
                 }
 
             });
 
 
-        if (!existingContribution) {
+        if (!existing) {
 
             return res.status(404).json({
+
                 message:
                     "Knowledge contribution not found"
+
             });
 
         }
@@ -329,15 +770,20 @@ export async function deleteContribution(
         await prisma.knowledgeContribution.delete({
 
             where: {
-                id: existingContribution.id
+
+                id:
+                    existing.id
+
             }
 
         });
 
 
         return res.status(200).json({
+
             message:
                 "Knowledge contribution deleted successfully"
+
         });
 
     } catch (error) {
@@ -345,8 +791,10 @@ export async function deleteContribution(
         console.error(error);
 
         return res.status(500).json({
+
             message:
                 "Unable to delete contribution"
+
         });
 
     }

@@ -3,6 +3,8 @@ import { Router } from "express";
 import {
     createContribution,
     getMyContributions,
+    searchContributions,
+    publishContribution,
     getContribution,
     updateContribution,
     deleteContribution
@@ -14,6 +16,12 @@ import {
 
 
 const router = Router();
+
+
+router.get(
+    "/search",
+    searchContributions
+);
 
 
 router.post(
@@ -32,7 +40,6 @@ router.get(
 
 router.get(
     "/:id",
-    authenticateToken,
     getContribution
 );
 
@@ -41,6 +48,13 @@ router.put(
     "/:id",
     authenticateToken,
     updateContribution
+);
+
+
+router.patch(
+    "/:id/publish",
+    authenticateToken,
+    publishContribution
 );
 
 
