@@ -7,6 +7,9 @@ import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/user.routes";
 import expertRoutes from "./routes/expert.routes";
 import contributionRoutes from "./routes/contribution.routes";
+import categoryRoutes from "./routes/category.routes";
+import tagRoutes from "./routes/tag.routes";
+
 
 const app = express();
 
@@ -33,6 +36,12 @@ app.use("/api/experts", expertRoutes);
 
 
 app.use("/api/contributions", contributionRoutes);
+
+
+app.use("/api/categories", categoryRoutes);
+
+
+app.use("/api/tags", tagRoutes);
 
 
 app.get("/", (req, res) => {

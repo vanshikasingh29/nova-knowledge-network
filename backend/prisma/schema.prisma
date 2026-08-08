@@ -38,6 +38,23 @@ model ExpertProfile {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model KnowledgeCategory {
+  id            String   @id @default(uuid())
+  name          String   @unique
+  description   String?
+  createdAt     DateTime @default(now())
+
+  contributions KnowledgeContribution[]
+}
+
+model KnowledgeTag {
+  id            String   @id @default(uuid())
+  name          String   @unique
+  createdAt     DateTime @default(now())
+
+  contributions KnowledgeContributionTag[]
+}
+
 model KnowledgeContribution {
   id         String             @id @default(uuid())
   title      String
@@ -50,4 +67,19 @@ model KnowledgeContribution {
 
   authorId String
   author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  categoryId String?
+  category   KnowledgeCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  tags KnowledgeContributionTag[]
+}
+
+model KnowledgeContributionTag {
+  contributionId String
+  tagId          String
+
+  contribution KnowledgeContribution @relation(fields: [contributionId], references: [id], onDelete: Cascade)
+  tag          KnowledgeTag          @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([contributionId, tagId])
 }
