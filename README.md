@@ -523,6 +523,9 @@ Creating:
 - design principles,
 - technical specifications.
 
+##### Progress
+CORE KNOWLEDGE NETWORK: 
+████████████████████ 100%
 
 ---
 
