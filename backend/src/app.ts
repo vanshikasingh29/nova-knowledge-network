@@ -5,7 +5,8 @@ import healthRoutes from "./routes/health.routes";
 import databaseRoutes from "./routes/database.routes";
 import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/user.routes";
-
+import expertRoutes from "./routes/expert.routes";
+import contributionRoutes from "./routes/contribution.routes";
 
 const app = express();
 
@@ -26,6 +27,12 @@ app.use("/api/auth", authRoutes);
 
 
 app.use("/api/users", userRoutes);
+
+
+app.use("/api/experts", expertRoutes);
+
+
+app.use("/api/contributions", contributionRoutes);
 
 
 app.get("/", (req, res) => {

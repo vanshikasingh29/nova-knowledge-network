@@ -7,50 +7,47 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum ContributionStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
 model User {
-  id String @id @default(uuid())
-
-  email String @unique
-
-  password String
-
-  name String
-
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
   createdAt DateTime @default(now())
 
   expertProfile ExpertProfile?
-
   contributions KnowledgeContribution[]
 }
 
 model ExpertProfile {
-  id String @id @default(uuid())
-
-  field String
-
+  id              String   @id @default(uuid())
+  field           String
   yearsExperience Int
-
-  biography String
+  biography       String
+  organisation    String?
+  location        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   userId String @unique
-
-  user User @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model KnowledgeContribution {
-  id String @id @default(uuid())
-
-  title String
-
-  topic String
-
+  id         String             @id @default(uuid())
+  title      String
+  topic      String
   experience String
-
-  lesson String
-
-  createdAt DateTime @default(now())
+  lesson     String
+  status     ContributionStatus @default(DRAFT)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
 
   authorId String
-
-  author User @relation(fields: [authorId], references: [id])
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
