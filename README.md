@@ -514,7 +514,7 @@ Creating technology focused on:
 
 # Development Roadmap
 
-## Phase 0 — Documentation Foundation
+## Documentation Foundation
 Creating:
 
 
