@@ -14,6 +14,15 @@ import {
     authenticateToken
 } from "../middleware/auth.middleware";
 
+import {
+    validateBody
+} from "../middleware/validation.middleware";
+
+import {
+    contributionSchema,
+    updateContributionSchema
+} from "../validation/schemas";
+
 
 const router = Router();
 
@@ -27,6 +36,7 @@ router.get(
 router.post(
     "/",
     authenticateToken,
+    validateBody(contributionSchema),
     createContribution
 );
 
@@ -47,6 +57,7 @@ router.get(
 router.put(
     "/:id",
     authenticateToken,
+    validateBody(updateContributionSchema),
     updateContribution
 );
 

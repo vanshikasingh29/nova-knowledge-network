@@ -12,14 +12,23 @@ import categoryRoutes from "./routes/category.routes";
 import tagRoutes from "./routes/tag.routes";
 import discoveryRoutes from "./routes/discovery.routes";
 
+import {
+    errorHandler
+} from "./middleware/error.middleware";
+
 
 const app = express();
+
+
+app.disable("x-powered-by");
 
 
 app.use(cors());
 
 
-app.use(express.json());
+app.use(express.json({
+    limit: "1mb"
+}));
 
 
 app.use("/api", healthRoutes);
@@ -69,16 +78,23 @@ app.use(
 
 app.get("/", (req, res) => {
 
-    res.json({
+    res.status(200).json({
 
-        project: "NOVA",
+        project:
+            "NOVA",
 
         message:
-            "Network Of Verified Archives API running"
+            "Network Of Verified Archives API running",
+
+        version:
+            "1.0.0"
 
     });
 
 });
+
+
+app.use(errorHandler);
 
 
 export default app;

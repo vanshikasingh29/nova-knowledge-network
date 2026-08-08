@@ -5,12 +5,21 @@ import {
     getTags
 } from "../controllers/tag.controller";
 
+import {
+    validateBody
+} from "../middleware/validation.middleware";
+
+import {
+    tagSchema
+} from "../validation/schemas";
+
 
 const router = Router();
 
 
 router.post(
     "/",
+    validateBody(tagSchema),
     createTag
 );
 

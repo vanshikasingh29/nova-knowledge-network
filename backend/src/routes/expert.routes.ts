@@ -11,6 +11,15 @@ import {
     authenticateToken
 } from "../middleware/auth.middleware";
 
+import {
+    validateBody
+} from "../middleware/validation.middleware";
+
+import {
+    expertProfileSchema,
+    updateExpertProfileSchema
+} from "../validation/schemas";
+
 
 const router = Router();
 
@@ -18,6 +27,7 @@ const router = Router();
 router.post(
     "/",
     authenticateToken,
+    validateBody(expertProfileSchema),
     createExpertProfile
 );
 
@@ -32,6 +42,7 @@ router.get(
 router.put(
     "/me",
     authenticateToken,
+    validateBody(updateExpertProfileSchema),
     updateExpertProfile
 );
 

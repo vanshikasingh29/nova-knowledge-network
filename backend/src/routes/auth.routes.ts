@@ -5,18 +5,29 @@ import {
     login
 } from "../controllers/auth.controller";
 
+import {
+    validateBody
+} from "../middleware/validation.middleware";
+
+import {
+    registerSchema,
+    loginSchema
+} from "../validation/schemas";
+
 
 const router = Router();
 
 
 router.post(
     "/register",
+    validateBody(registerSchema),
     register
 );
 
 
 router.post(
     "/login",
+    validateBody(loginSchema),
     login
 );
 
