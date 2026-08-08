@@ -6,6 +6,7 @@ import databaseRoutes from "./routes/database.routes";
 import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/user.routes";
 import expertRoutes from "./routes/expert.routes";
+import expertDiscoveryRoutes from "./routes/expert-discovery.routes";
 import contributionRoutes from "./routes/contribution.routes";
 import categoryRoutes from "./routes/category.routes";
 import tagRoutes from "./routes/tag.routes";
@@ -36,16 +37,34 @@ app.use("/api/users", userRoutes);
 app.use("/api/experts", expertRoutes);
 
 
-app.use("/api/contributions", contributionRoutes);
+app.use(
+    "/api/experts",
+    expertDiscoveryRoutes
+);
 
 
-app.use("/api/categories", categoryRoutes);
+app.use(
+    "/api/contributions",
+    contributionRoutes
+);
 
 
-app.use("/api/tags", tagRoutes);
+app.use(
+    "/api/categories",
+    categoryRoutes
+);
 
 
-app.use("/api/discovery", discoveryRoutes);
+app.use(
+    "/api/tags",
+    tagRoutes
+);
+
+
+app.use(
+    "/api/discovery",
+    discoveryRoutes
+);
 
 
 app.get("/", (req, res) => {

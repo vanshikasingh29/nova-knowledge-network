@@ -1,4 +1,4 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 
 import { prisma } from "../config/prisma";
 
@@ -46,15 +46,17 @@ export async function createExpertProfile(
         }
 
 
-        const existingProfile =
+        const existing =
             await prisma.expertProfile.findUnique({
+
                 where: {
                     userId: req.userId
                 }
+
             });
 
 
-        if (existingProfile) {
+        if (existing) {
 
             return res.status(409).json({
                 message:
@@ -71,7 +73,8 @@ export async function createExpertProfile(
 
                     field,
 
-                    yearsExperience,
+                    yearsExperience:
+                        Number(yearsExperience),
 
                     biography,
 
@@ -81,7 +84,8 @@ export async function createExpertProfile(
                     location:
                         location || null,
 
-                    userId: req.userId
+                    userId:
+                        req.userId
 
                 }
 
@@ -91,7 +95,6 @@ export async function createExpertProfile(
         return res.status(201).json({
             profile
         });
-
 
     } catch (error) {
 
@@ -107,7 +110,7 @@ export async function createExpertProfile(
 }
 
 
-export async function getExpertProfile(
+export async function getMyExpertProfile(
     req: AuthenticatedRequest,
     res: Response
 ) {
@@ -117,7 +120,8 @@ export async function getExpertProfile(
         if (!req.userId) {
 
             return res.status(401).json({
-                message: "Authentication required"
+                message:
+                    "Authentication required"
             });
 
         }
@@ -127,25 +131,8 @@ export async function getExpertProfile(
             await prisma.expertProfile.findUnique({
 
                 where: {
-                    userId: req.userId
-                },
-
-                include: {
-
-                    user: {
-
-                        select: {
-
-                            id: true,
-
-                            name: true,
-
-                            email: true
-
-                        }
-
-                    }
-
+                    userId:
+                        req.userId
                 }
 
             });
@@ -164,7 +151,6 @@ export async function getExpertProfile(
         return res.status(200).json({
             profile
         });
-
 
     } catch (error) {
 
@@ -190,23 +176,25 @@ export async function updateExpertProfile(
         if (!req.userId) {
 
             return res.status(401).json({
-                message: "Authentication required"
+                message:
+                    "Authentication required"
             });
 
         }
 
 
-        const existingProfile =
+        const existing =
             await prisma.expertProfile.findUnique({
 
                 where: {
-                    userId: req.userId
+                    userId:
+                        req.userId
                 }
 
             });
 
 
-        if (!existingProfile) {
+        if (!existing) {
 
             return res.status(404).json({
                 message:
@@ -229,7 +217,8 @@ export async function updateExpertProfile(
             await prisma.expertProfile.update({
 
                 where: {
-                    userId: req.userId
+                    id:
+                        existing.id
                 },
 
                 data: {
@@ -239,7 +228,8 @@ export async function updateExpertProfile(
                     }),
 
                     ...(yearsExperience !== undefined && {
-                        yearsExperience
+                        yearsExperience:
+                            Number(yearsExperience)
                     }),
 
                     ...(biography !== undefined && {
@@ -247,11 +237,13 @@ export async function updateExpertProfile(
                     }),
 
                     ...(organisation !== undefined && {
-                        organisation
+                        organisation:
+                            organisation || null
                     }),
 
                     ...(location !== undefined && {
-                        location
+                        location:
+                            location || null
                     })
 
                 }
@@ -270,6 +262,80 @@ export async function updateExpertProfile(
         return res.status(500).json({
             message:
                 "Unable to update expert profile"
+        });
+
+    }
+
+}
+
+
+export async function requestVerification(
+    req: AuthenticatedRequest,
+    res: Response
+) {
+
+    try {
+
+        if (!req.userId) {
+
+            return res.status(401).json({
+                message:
+                    "Authentication required"
+            });
+
+        }
+
+
+        const profile =
+            await prisma.expertProfile.findUnique({
+
+                where: {
+                    userId:
+                        req.userId
+                }
+
+            });
+
+
+        if (!profile) {
+
+            return res.status(404).json({
+                message:
+                    "Expert profile not found"
+            });
+
+        }
+
+
+        const updated =
+            await prisma.expertProfile.update({
+
+                where: {
+                    id:
+                        profile.id
+                },
+
+                data: {
+
+                    verificationStatus:
+                        "PENDING"
+
+                }
+
+            });
+
+
+        return res.status(200).json({
+            profile: updated
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        return res.status(500).json({
+            message:
+                "Unable to request verification"
         });
 
     }

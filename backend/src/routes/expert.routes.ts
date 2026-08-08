@@ -2,8 +2,9 @@ import { Router } from "express";
 
 import {
     createExpertProfile,
-    getExpertProfile,
-    updateExpertProfile
+    getMyExpertProfile,
+    updateExpertProfile,
+    requestVerification
 } from "../controllers/expert.controller";
 
 import {
@@ -15,23 +16,30 @@ const router = Router();
 
 
 router.post(
-    "/profile",
+    "/",
     authenticateToken,
     createExpertProfile
 );
 
 
 router.get(
-    "/profile",
+    "/me",
     authenticateToken,
-    getExpertProfile
+    getMyExpertProfile
 );
 
 
 router.put(
-    "/profile",
+    "/me",
     authenticateToken,
     updateExpertProfile
+);
+
+
+router.post(
+    "/me/verification",
+    authenticateToken,
+    requestVerification
 );
 
 

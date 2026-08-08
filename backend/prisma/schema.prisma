@@ -13,6 +13,13 @@ enum ContributionStatus {
   ARCHIVED
 }
 
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
@@ -25,32 +32,33 @@ model User {
 }
 
 model ExpertProfile {
-  id              String   @id @default(uuid())
-  field           String
-  yearsExperience Int
-  biography       String
-  organisation    String?
-  location        String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                 String             @id @default(uuid())
+  field              String
+  yearsExperience    Int
+  biography          String
+  organisation       String?
+  location           String?
+  verificationStatus VerificationStatus @default(UNVERIFIED)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  userId             String             @unique
 
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model KnowledgeCategory {
-  id            String   @id @default(uuid())
-  name          String   @unique
-  description   String?
-  createdAt     DateTime @default(now())
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
 
   contributions KnowledgeContribution[]
 }
 
 model KnowledgeTag {
-  id            String   @id @default(uuid())
-  name          String   @unique
-  createdAt     DateTime @default(now())
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
 
   contributions KnowledgeContributionTag[]
 }
@@ -64,14 +72,12 @@ model KnowledgeContribution {
   status     ContributionStatus @default(DRAFT)
   createdAt  DateTime           @default(now())
   updatedAt  DateTime           @updatedAt
-
-  authorId String
-  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
-
+  authorId   String
   categoryId String?
-  category   KnowledgeCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
-  tags KnowledgeContributionTag[]
+  author   User                       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  category KnowledgeCategory?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  tags     KnowledgeContributionTag[]
 }
 
 model KnowledgeContributionTag {
