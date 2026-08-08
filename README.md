@@ -537,6 +537,9 @@ Planned:
 - database connection,
 - development environment.
 
+##### Progress
+CORE KNOWLEDGE NETWORK: 
+███████████████  70%
 
 ---
 
