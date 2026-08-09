@@ -1,10 +1,10 @@
 import { Router } from "express";
 
 import {
-    integrateContributionGraph,
-    rebuildGraph,
-    getGraph,
-    removeGraph
+    synchroniseContribution,
+    synchroniseContributionNode,
+    synchroniseCategoryNode,
+    synchroniseTagNode
 } from "../controllers/knowledge-integration.controller";
 
 import {
@@ -15,69 +15,44 @@ import {
 const router = Router();
 
 
-/*
-|--------------------------------------------------------------------------
-| Get contribution graph
-|--------------------------------------------------------------------------
-*/
-
-router.get(
-
-    "/contributions/:contributionId",
-
-    getGraph
-
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| Build contribution graph
-|--------------------------------------------------------------------------
-*/
-
+/**
+ * Build the complete knowledge graph
+ * for a contribution.
+ */
 router.post(
-
-    "/contributions/:contributionId",
-
+    "/contributions/:id/synchronise",
     authenticateToken,
-
-    integrateContributionGraph
-
+    synchroniseContribution
 );
 
 
-/*
-|--------------------------------------------------------------------------
-| Rebuild contribution graph
-|--------------------------------------------------------------------------
-*/
-
+/**
+ * Create/retrieve the contribution node.
+ */
 router.post(
-
-    "/contributions/:contributionId/rebuild",
-
+    "/contributions/:id/node",
     authenticateToken,
-
-    rebuildGraph
-
+    synchroniseContributionNode
 );
 
 
-/*
-|--------------------------------------------------------------------------
-| Remove contribution graph
-|--------------------------------------------------------------------------
-*/
-
-router.delete(
-
-    "/contributions/:contributionId",
-
+/**
+ * Create/retrieve the category node.
+ */
+router.post(
+    "/categories/:id/node",
     authenticateToken,
+    synchroniseCategoryNode
+);
 
-    removeGraph
 
+/**
+ * Create/retrieve the tag node.
+ */
+router.post(
+    "/tags/:id/node",
+    authenticateToken,
+    synchroniseTagNode
 );
 
 

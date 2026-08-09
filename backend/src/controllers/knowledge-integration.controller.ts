@@ -5,20 +5,14 @@ import {
 } from "express";
 
 import {
-    integrateContribution,
-    rebuildContributionGraph,
-    getContributionGraph,
-    removeContributionGraph
+    syncContributionNode,
+    syncCategoryNode,
+    syncTagNode,
+    synchroniseContributionGraph
 } from "../services/knowledge-integration.service";
 
 
-/*
-|--------------------------------------------------------------------------
-| Integrate contribution
-|--------------------------------------------------------------------------
-*/
-
-export async function integrateContributionGraph(
+export async function synchroniseContribution(
     req: Request,
     res: Response,
     next: NextFunction
@@ -26,162 +20,13 @@ export async function integrateContributionGraph(
 
     try {
 
-        const creatorId =
+        const userId =
             (req as any).user.userId;
-
-
-        const contributionId =
-            req.params.contributionId;
-
-
-        const graph =
-            await integrateContribution(
-
-                contributionId,
-
-                creatorId
-
-            );
-
-
-        return res.status(201).json({
-
-            success: true,
-
-            message:
-                "Contribution integrated into knowledge graph",
-
-            graph
-
-        });
-
-    } catch (error) {
-
-        next(error);
-
-    }
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Rebuild contribution graph
-|--------------------------------------------------------------------------
-*/
-
-export async function rebuildGraph(
-    req: Request,
-    res: Response,
-    next: NextFunction
-) {
-
-    try {
-
-        const creatorId =
-            (req as any).user.userId;
-
-
-        const contributionId =
-            req.params.contributionId;
-
-
-        const graph =
-            await rebuildContributionGraph(
-
-                contributionId,
-
-                creatorId
-
-            );
-
-
-        return res.status(200).json({
-
-            success: true,
-
-            message:
-                "Contribution knowledge graph rebuilt",
-
-            graph
-
-        });
-
-    } catch (error) {
-
-        next(error);
-
-    }
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Get contribution graph
-|--------------------------------------------------------------------------
-*/
-
-export async function getGraph(
-    req: Request,
-    res: Response,
-    next: NextFunction
-) {
-
-    try {
-
-        const contributionId =
-            req.params.contributionId;
-
-
-        const graph =
-            await getContributionGraph(
-
-                contributionId
-
-            );
-
-
-        return res.status(200).json({
-
-            success: true,
-
-            graph
-
-        });
-
-    } catch (error) {
-
-        next(error);
-
-    }
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Remove contribution graph
-|--------------------------------------------------------------------------
-*/
-
-export async function removeGraph(
-    req: Request,
-    res: Response,
-    next: NextFunction
-) {
-
-    try {
-
-        const contributionId =
-            req.params.contributionId;
-
 
         const result =
-            await removeContributionGraph(
-
-                contributionId
-
+            await synchroniseContributionGraph(
+                req.params.id,
+                userId
             );
 
 
@@ -189,10 +34,112 @@ export async function removeGraph(
 
             success: true,
 
-            message:
-                "Contribution graph removed",
+            graph: result
 
-            result
+        });
+
+    } catch (error) {
+
+        next(error);
+
+    }
+
+}
+
+
+export async function synchroniseContributionNode(
+    req: Request,
+    res: Response,
+    next: NextFunction
+) {
+
+    try {
+
+        const userId =
+            (req as any).user.userId;
+
+        const node =
+            await syncContributionNode(
+                req.params.id,
+                userId
+            );
+
+
+        return res.status(200).json({
+
+            success: true,
+
+            node
+
+        });
+
+    } catch (error) {
+
+        next(error);
+
+    }
+
+}
+
+
+export async function synchroniseCategoryNode(
+    req: Request,
+    res: Response,
+    next: NextFunction
+) {
+
+    try {
+
+        const userId =
+            (req as any).user.userId;
+
+        const node =
+            await syncCategoryNode(
+                req.params.id,
+                userId
+            );
+
+
+        return res.status(200).json({
+
+            success: true,
+
+            node
+
+        });
+
+    } catch (error) {
+
+        next(error);
+
+    }
+
+}
+
+
+export async function synchroniseTagNode(
+    req: Request,
+    res: Response,
+    next: NextFunction
+) {
+
+    try {
+
+        const userId =
+            (req as any).user.userId;
+
+        const node =
+            await syncTagNode(
+                req.params.id,
+                userId
+            );
+
+
+        return res.status(200).json({
+
+            success: true,
+
+            node
 
         });
 
