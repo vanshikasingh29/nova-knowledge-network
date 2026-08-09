@@ -13,6 +13,7 @@ import tagRoutes from "./routes/tag.routes";
 import discoveryRoutes from "./routes/discovery.routes";
 import knowledgeGraphRoutes from "./routes/knowledge-graph.routes";
 import knowledgeIntegrationRoutes from "./routes/knowledge-integration.routes";
+import neo4jRoutes from "./routes/neo4j.routes";
 
 
 
@@ -87,6 +88,11 @@ app.use(
 app.use(
     "/api/knowledge-integration",
     knowledgeIntegrationRoutes
+);
+
+app.use(
+    "/api/neo4j",
+    neo4jRoutes
 );
 
 
