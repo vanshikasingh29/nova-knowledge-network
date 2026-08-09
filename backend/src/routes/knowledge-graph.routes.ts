@@ -6,7 +6,9 @@ import {
     createRelationship,
     getRelatedNodes,
     searchNodes,
-    graphStats
+    graphStats,
+    graphOverview,
+    neighbourhood
 } from "../controllers/knowledge-graph.controller";
 
 import {
@@ -27,24 +29,20 @@ const router = Router();
 
 
 router.get(
+    "/search",
+    searchNodes
+);
+
+
+router.get(
     "/stats",
     graphStats
 );
 
 
 router.get(
-    "/search",
-    searchNodes
-);
-
-
-router.post(
-    "/nodes",
-    authenticateToken,
-    validateBody(
-        createKnowledgeNodeSchema
-    ),
-    createNode
+    "/overview",
+    graphOverview
 );
 
 
@@ -57,6 +55,22 @@ router.get(
 router.get(
     "/nodes/:id/related",
     getRelatedNodes
+);
+
+
+router.get(
+    "/nodes/:id/neighbourhood",
+    neighbourhood
+);
+
+
+router.post(
+    "/nodes",
+    authenticateToken,
+    validateBody(
+        createKnowledgeNodeSchema
+    ),
+    createNode
 );
 
 

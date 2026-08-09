@@ -14,6 +14,7 @@ import discoveryRoutes from "./routes/discovery.routes";
 import knowledgeGraphRoutes from "./routes/knowledge-graph.routes";
 
 
+
 import {
     errorHandler
 } from "./middleware/error.middleware";
@@ -81,6 +82,7 @@ app.use(
     "/api/knowledge-graph",
     knowledgeGraphRoutes
 );
+
 
 app.get("/", (req, res) => {
 
