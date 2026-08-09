@@ -7,474 +7,1047 @@ import { prisma } from "../config/prisma";
 
 
 export interface CreateKnowledgeNodeInput {
+
     name: string;
-    description: string;
+
+    description?: string;
+
     type: KnowledgeNodeType;
-    creatorId: string;
+
+    userId?: string;
+
     contributionId?: string;
+
 }
 
 
 export interface CreateKnowledgeRelationshipInput {
+
     sourceNodeId: string;
+
     targetNodeId: string;
+
     type: RelationshipType;
+
     description?: string;
+
     creatorId: string;
+
     contributionId?: string;
+
 }
 
 
-export interface SearchKnowledgeOptions {
-    query?: string;
-    type?: KnowledgeNodeType;
-    limit?: number;
-}
-
+/*
+|--------------------------------------------------------------------------
+| Knowledge Nodes
+|--------------------------------------------------------------------------
+*/
 
 export async function createKnowledgeNode(
     input: CreateKnowledgeNodeInput
 ) {
+
     return prisma.knowledgeNode.create({
+
         data: {
+
             name: input.name,
-            description: input.description,
+
+            description:
+                input.description ?? null,
+
             type: input.type,
-            userId: input.creatorId,
-            contributionId: input.contributionId ?? null
-        },
-        include: {
-            user: {
-                select: {
-                    id: true,
-                    name: true
-                }
-            },
-            contribution: {
-                select: {
-                    id: true,
-                    title: true,
-                    topic: true
-                }
-            }
+
+            userId:
+                input.userId ?? null,
+
+            contributionId:
+                input.contributionId ?? null
+
         }
+
     });
+
 }
 
 
 export async function getKnowledgeNode(
     nodeId: string
 ) {
+
     return prisma.knowledgeNode.findUnique({
+
         where: {
+
             id: nodeId
+
         },
+
         include: {
+
             user: {
+
                 select: {
+
                     id: true,
+
                     name: true
+
                 }
+
             },
+
             contribution: {
+
                 select: {
+
                     id: true,
+
                     title: true,
+
                     topic: true,
+
                     status: true
+
                 }
+
             },
+
             outgoingRelationships: {
+
                 include: {
+
                     targetNode: true
+
                 }
+
             },
+
             incomingRelationships: {
+
                 include: {
+
                     sourceNode: true
+
                 }
+
             }
+
         }
+
     });
+
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| Knowledge Relationships
+|--------------------------------------------------------------------------
+*/
 
 export async function createKnowledgeRelationship(
     input: CreateKnowledgeRelationshipInput
 ) {
+
     if (
         input.sourceNodeId ===
         input.targetNodeId
     ) {
+
         throw new Error(
             "A knowledge node cannot be related to itself"
         );
+
     }
 
+
     return prisma.knowledgeRelationship.create({
+
         data: {
-            sourceNodeId: input.sourceNodeId,
-            targetNodeId: input.targetNodeId,
-            type: input.type,
-            description: input.description ?? null,
-            creatorId: input.creatorId,
+
+            sourceNodeId:
+                input.sourceNodeId,
+
+            targetNodeId:
+                input.targetNodeId,
+
+            type:
+                input.type,
+
+            description:
+                input.description ?? null,
+
+            creatorId:
+                input.creatorId,
+
             contributionId:
                 input.contributionId ?? null
+
         },
+
         include: {
+
             sourceNode: true,
+
             targetNode: true
+
         }
+
     });
+
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| Related Knowledge
+|--------------------------------------------------------------------------
+*/
 
 export async function getRelatedKnowledge(
     nodeId: string
 ) {
+
     const node =
         await prisma.knowledgeNode.findUnique({
+
             where: {
+
                 id: nodeId
+
             },
+
             include: {
+
                 outgoingRelationships: {
+
                     include: {
+
                         targetNode: true
+
                     }
+
                 },
+
                 incomingRelationships: {
+
                     include: {
+
                         sourceNode: true
+
                     }
+
                 }
+
             }
+
         });
 
+
     if (!node) {
+
         return null;
+
     }
+
 
     const outgoing =
         node.outgoingRelationships.map(
             (relationship) => ({
+
                 relationshipId:
                     relationship.id,
+
                 relationshipType:
                     relationship.type,
+
                 direction:
-                    "outgoing" as const,
+                    "outgoing",
+
                 node:
                     relationship.targetNode
+
             })
         );
+
 
     const incoming =
         node.incomingRelationships.map(
             (relationship) => ({
+
                 relationshipId:
                     relationship.id,
+
                 relationshipType:
                     relationship.type,
+
                 direction:
-                    "incoming" as const,
+                    "incoming",
+
                 node:
                     relationship.sourceNode
+
             })
         );
 
+
     return {
+
         node: {
-            id: node.id,
-            name: node.name,
-            description: node.description,
-            type: node.type
+
+            id:
+                node.id,
+
+            name:
+                node.name,
+
+            description:
+                node.description,
+
+            type:
+                node.type
+
         },
+
         relationships: [
+
             ...outgoing,
+
             ...incoming
+
         ]
+
     };
+
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| Search
+|--------------------------------------------------------------------------
+*/
 
 export async function searchKnowledgeNodes(
-    options: SearchKnowledgeOptions
+    query: string
 ) {
-    const {
-        query,
-        type,
-        limit = 25
-    } = options;
 
     return prisma.knowledgeNode.findMany({
+
         where: {
-            ...(type
-                ? {
-                    type
+
+            OR: [
+
+                {
+
+                    name: {
+
+                        contains: query,
+
+                        mode: "insensitive"
+
+                    }
+
+                },
+
+                {
+
+                    description: {
+
+                        contains: query,
+
+                        mode: "insensitive"
+
+                    }
+
                 }
-                : {}),
-            ...(query
-                ? {
-                    OR: [
-                        {
-                            name: {
-                                contains:
-                                    query,
-                                mode:
-                                    "insensitive"
-                            }
-                        },
-                        {
-                            description: {
-                                contains:
-                                    query,
-                                mode:
-                                    "insensitive"
-                            }
-                        }
-                    ]
-                }
-                : {})
+
+            ]
+
         },
+
         include: {
-            user: {
-                select: {
-                    id: true,
-                    name: true
-                }
-            },
+
             outgoingRelationships: {
+
                 include: {
+
                     targetNode: true
+
                 }
-            },
-            incomingRelationships: {
-                include: {
-                    sourceNode: true
-                }
+
             }
+
         },
+
         orderBy: {
+
             name: "asc"
-        },
-        take: Math.min(limit, 100)
+
+        }
+
     });
+
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| Graph Statistics
+|--------------------------------------------------------------------------
+*/
 
 export async function getKnowledgeGraphStats() {
+
     const [
+
         nodeCount,
+
         relationshipCount
+
     ] = await Promise.all([
+
         prisma.knowledgeNode.count(),
+
         prisma.knowledgeRelationship.count()
+
     ]);
 
-    const [
-        nodesByType,
-        relationshipsByType
-    ] = await Promise.all([
-        prisma.knowledgeNode.groupBy({
-            by: ["type"],
+
+    const nodesByType =
+        await prisma.knowledgeNode.groupBy({
+
+            by: [
+
+                "type"
+
+            ],
+
             _count: {
+
                 _all: true
+
             }
-        }),
-        prisma.knowledgeRelationship.groupBy({
-            by: ["type"],
-            _count: {
-                _all: true
-            }
-        })
-    ]);
 
-    return {
-        nodes: nodeCount,
-        relationships: relationshipCount,
-        nodesByType,
-        relationshipsByType
-    };
-}
-
-
-export async function getGraphOverview() {
-    const [
-        nodes,
-        relationships
-    ] = await Promise.all([
-        prisma.knowledgeNode.findMany({
-            select: {
-                id: true,
-                name: true,
-                type: true
-            },
-            orderBy: {
-                name: "asc"
-            }
-        }),
-        prisma.knowledgeRelationship.findMany({
-            select: {
-                id: true,
-                sourceNodeId: true,
-                targetNodeId: true,
-                type: true,
-                description: true
-            }
-        })
-    ]);
-
-    return {
-        nodes,
-        relationships
-    };
-}
-
-
-export async function getNeighbourhood(
-    nodeId: string,
-    depth = 1
-) {
-    const startNode =
-        await prisma.knowledgeNode.findUnique({
-            where: {
-                id: nodeId
-            },
-            select: {
-                id: true,
-                name: true,
-                description: true,
-                type: true
-            }
         });
 
-    if (!startNode) {
-        return null;
-    }
 
-    const visited = new Set<string>([
-        nodeId
-    ]);
+    const relationshipsByType =
+        await prisma.knowledgeRelationship.groupBy({
 
-    let frontier = [nodeId];
+            by: [
 
-    const discoveredNodes = [
-        startNode
-    ];
+                "type"
 
-    const discoveredRelationships: Array<{
-        id: string;
-        sourceNodeId: string;
-        targetNodeId: string;
-        type: RelationshipType;
-        description: string | null;
-    }> = [];
+            ],
 
-    const safeDepth =
-        Math.min(Math.max(depth, 1), 3);
+            _count: {
 
-    for (
-        let level = 0;
-        level < safeDepth;
-        level++
-    ) {
-        if (frontier.length === 0) {
-            break;
-        }
+                _all: true
 
-        const relationships =
-            await prisma.knowledgeRelationship.findMany({
-                where: {
-                    OR: [
-                        {
-                            sourceNodeId: {
-                                in: frontier
-                            }
-                        },
-                        {
-                            targetNodeId: {
-                                in: frontier
-                            }
-                        }
-                    ]
-                }
-            });
-
-        const nextFrontier: string[] = [];
-
-        for (
-            const relationship of relationships
-        ) {
-            if (
-                !discoveredRelationships.some(
-                    existing =>
-                        existing.id ===
-                        relationship.id
-                )
-            ) {
-                discoveredRelationships.push({
-                    id:
-                        relationship.id,
-                    sourceNodeId:
-                        relationship.sourceNodeId,
-                    targetNodeId:
-                        relationship.targetNodeId,
-                    type:
-                        relationship.type,
-                    description:
-                        relationship.description
-                });
             }
 
-            const connectedId =
-                frontier.includes(
-                    relationship.sourceNodeId
-                )
-                    ? relationship.targetNodeId
-                    : relationship.sourceNodeId;
+        });
 
-            if (
-                !visited.has(connectedId)
-            ) {
-                visited.add(connectedId);
-                nextFrontier.push(
-                    connectedId
-                );
-            }
-        }
-
-        if (
-            nextFrontier.length > 0
-        ) {
-            const nodes =
-                await prisma.knowledgeNode.findMany({
-                    where: {
-                        id: {
-                            in: nextFrontier
-                        }
-                    },
-                    select: {
-                        id: true,
-                        name: true,
-                        description: true,
-                        type: true
-                    }
-                });
-
-            discoveredNodes.push(
-                ...nodes
-            );
-        }
-
-        frontier = nextFrontier;
-    }
 
     return {
-        root: startNode,
-        depth: safeDepth,
-        nodes: discoveredNodes,
+
+        nodes:
+            nodeCount,
+
         relationships:
-            discoveredRelationships
+            relationshipCount,
+
+        nodesByType,
+
+        relationshipsByType
+
     };
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Contribution → Knowledge Graph Integration
+|--------------------------------------------------------------------------
+*/
+
+export async function createContributionKnowledgeNode(
+    contributionId: string,
+    creatorId: string
+) {
+
+    const contribution =
+        await prisma.knowledgeContribution.findUnique({
+
+            where: {
+
+                id: contributionId
+
+            }
+
+        });
+
+
+    if (!contribution) {
+
+        throw new Error(
+            "Knowledge contribution not found"
+        );
+
+    }
+
+
+    const existingNode =
+        await prisma.knowledgeNode.findFirst({
+
+            where: {
+
+                contributionId
+
+            }
+
+        });
+
+
+    if (existingNode) {
+
+        return existingNode;
+
+    }
+
+
+    return prisma.knowledgeNode.create({
+
+        data: {
+
+            name:
+                contribution.title,
+
+            description:
+                contribution.lesson,
+
+            type:
+                KnowledgeNodeType.CONTRIBUTION,
+
+            userId:
+                creatorId,
+
+            contributionId
+
+        }
+
+    });
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Category → Knowledge Graph
+|--------------------------------------------------------------------------
+*/
+
+export async function createCategoryKnowledgeNode(
+    categoryId: string,
+    creatorId: string
+) {
+
+    const category =
+        await prisma.knowledgeCategory.findUnique({
+
+            where: {
+
+                id: categoryId
+
+            }
+
+        });
+
+
+    if (!category) {
+
+        throw new Error(
+            "Knowledge category not found"
+        );
+
+    }
+
+
+    const existingNode =
+        await prisma.knowledgeNode.findFirst({
+
+            where: {
+
+                name:
+                    category.name,
+
+                type:
+                    KnowledgeNodeType.CATEGORY
+
+            }
+
+        });
+
+
+    if (existingNode) {
+
+        return existingNode;
+
+    }
+
+
+    return prisma.knowledgeNode.create({
+
+        data: {
+
+            name:
+                category.name,
+
+            description:
+                category.description ??
+                `Knowledge category: ${category.name}`,
+
+            type:
+                KnowledgeNodeType.CATEGORY,
+
+            userId:
+                creatorId
+
+        }
+
+    });
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Tag → Knowledge Graph
+|--------------------------------------------------------------------------
+*/
+
+export async function createTagKnowledgeNode(
+    tagId: string,
+    creatorId: string
+) {
+
+    const tag =
+        await prisma.knowledgeTag.findUnique({
+
+            where: {
+
+                id: tagId
+
+            }
+
+        });
+
+
+    if (!tag) {
+
+        throw new Error(
+            "Knowledge tag not found"
+        );
+
+    }
+
+
+    const existingNode =
+        await prisma.knowledgeNode.findFirst({
+
+            where: {
+
+                name:
+                    tag.name,
+
+                type:
+                    KnowledgeNodeType.TAG
+
+            }
+
+        });
+
+
+    if (existingNode) {
+
+        return existingNode;
+
+    }
+
+
+    return prisma.knowledgeNode.create({
+
+        data: {
+
+            name:
+                tag.name,
+
+            description:
+                `Knowledge tag: ${tag.name}`,
+
+            type:
+                KnowledgeNodeType.TAG,
+
+            userId:
+                creatorId
+
+        }
+
+    });
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Contribution → Category Relationship
+|--------------------------------------------------------------------------
+*/
+
+export async function linkContributionToCategory(
+    contributionId: string,
+    categoryId: string,
+    creatorId: string
+) {
+
+    const contributionNode =
+        await createContributionKnowledgeNode(
+            contributionId,
+            creatorId
+        );
+
+
+    const categoryNode =
+        await createCategoryKnowledgeNode(
+            categoryId,
+            creatorId
+        );
+
+
+    return prisma.knowledgeRelationship.upsert({
+
+        where: {
+
+            sourceNodeId_targetNodeId_type: {
+
+                sourceNodeId:
+                    contributionNode.id,
+
+                targetNodeId:
+                    categoryNode.id,
+
+                type:
+                    RelationshipType.BELONGS_TO
+
+            }
+
+        },
+
+        update: {},
+
+        create: {
+
+            sourceNodeId:
+                contributionNode.id,
+
+            targetNodeId:
+                categoryNode.id,
+
+            type:
+                RelationshipType.BELONGS_TO,
+
+            creatorId,
+
+            contributionId
+
+        }
+
+    });
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Contribution → Tag Relationship
+|--------------------------------------------------------------------------
+*/
+
+export async function linkContributionToTag(
+    contributionId: string,
+    tagId: string,
+    creatorId: string
+) {
+
+    const contributionNode =
+        await createContributionKnowledgeNode(
+            contributionId,
+            creatorId
+        );
+
+
+    const tagNode =
+        await createTagKnowledgeNode(
+            tagId,
+            creatorId
+        );
+
+
+    return prisma.knowledgeRelationship.upsert({
+
+        where: {
+
+            sourceNodeId_targetNodeId_type: {
+
+                sourceNodeId:
+                    contributionNode.id,
+
+                targetNodeId:
+                    tagNode.id,
+
+                type:
+                    RelationshipType.RELATED_TO
+
+            }
+
+        },
+
+        update: {},
+
+        create: {
+
+            sourceNodeId:
+                contributionNode.id,
+
+            targetNodeId:
+                tagNode.id,
+
+            type:
+                RelationshipType.RELATED_TO,
+
+            creatorId,
+
+            contributionId
+
+        }
+
+    });
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Build Complete Contribution Graph
+|--------------------------------------------------------------------------
+*/
+
+export async function buildContributionGraph(
+    contributionId: string,
+    creatorId: string
+) {
+
+    const contribution =
+        await prisma.knowledgeContribution.findUnique({
+
+            where: {
+
+                id: contributionId
+
+            },
+
+            include: {
+
+                category: true,
+
+                tags: {
+
+                    include: {
+
+                        tag: true
+
+                    }
+
+                },
+
+                author: {
+
+                    include: {
+
+                        expertProfile: true
+
+                    }
+
+                }
+
+            }
+
+        });
+
+
+    if (!contribution) {
+
+        throw new Error(
+            "Knowledge contribution not found"
+        );
+
+    }
+
+
+    const contributionNode =
+        await createContributionKnowledgeNode(
+            contributionId,
+            creatorId
+        );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Category relationship
+    |--------------------------------------------------------------------------
+    */
+
+    if (contribution.category) {
+
+        await linkContributionToCategory(
+
+            contributionId,
+
+            contribution.category.id,
+
+            creatorId
+
+        );
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Tag relationships
+    |--------------------------------------------------------------------------
+    */
+
+    for (
+        const contributionTag
+        of contribution.tags
+    ) {
+
+        await linkContributionToTag(
+
+            contributionId,
+
+            contributionTag.tagId,
+
+            creatorId
+
+        );
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Author / Expert relationship
+    |--------------------------------------------------------------------------
+    */
+
+    if (contribution.author.expertProfile) {
+
+        const existingPersonNode =
+            await prisma.knowledgeNode.findFirst({
+
+                where: {
+
+                    userId:
+                        contribution.author.id,
+
+                    type:
+                        KnowledgeNodeType.PERSON
+
+                }
+
+            });
+
+
+        const personNode =
+            existingPersonNode ??
+
+            await prisma.knowledgeNode.create({
+
+                data: {
+
+                    name:
+                        contribution.author.name,
+
+                    description:
+                        contribution
+                            .author
+                            .expertProfile
+                            .biography,
+
+                    type:
+                        KnowledgeNodeType.PERSON,
+
+                    userId:
+                        contribution.author.id
+
+                }
+
+            });
+
+
+        await prisma.knowledgeRelationship.upsert({
+
+            where: {
+
+                sourceNodeId_targetNodeId_type: {
+
+                    sourceNodeId:
+                        personNode.id,
+
+                    targetNodeId:
+                        contributionNode.id,
+
+                    type:
+                        RelationshipType.DERIVED_FROM
+
+                }
+
+            },
+
+            update: {},
+
+            create: {
+
+                sourceNodeId:
+                    personNode.id,
+
+                targetNodeId:
+                    contributionNode.id,
+
+                type:
+                    RelationshipType.DERIVED_FROM,
+
+                creatorId,
+
+                contributionId
+
+            }
+
+        });
+
+    }
+
+
+    return getKnowledgeNode(
+
+        contributionNode.id
+
+    );
+
 }

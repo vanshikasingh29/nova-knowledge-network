@@ -12,7 +12,7 @@ import categoryRoutes from "./routes/category.routes";
 import tagRoutes from "./routes/tag.routes";
 import discoveryRoutes from "./routes/discovery.routes";
 import knowledgeGraphRoutes from "./routes/knowledge-graph.routes";
-
+import knowledgeIntegrationRoutes from "./routes/knowledge-integration.routes";
 
 
 import {
@@ -83,6 +83,10 @@ app.use(
     knowledgeGraphRoutes
 );
 
+app.use(
+    "/api/knowledge-integration",
+    knowledgeIntegrationRoutes
+);
 
 app.get("/", (req, res) => {
 
