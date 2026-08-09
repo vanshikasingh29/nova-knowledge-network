@@ -539,7 +539,7 @@ Planned:
 
 ##### Progress
 CORE KNOWLEDGE NETWORK: 
-███████████████  70%
+████████████████████ 100%
 
 ---
 
@@ -550,6 +550,9 @@ Building:
 - knowledge submissions,
 - categories.
 
+##### Progress
+CORE KNOWLEDGE NETWORK: 
+████████████████████ 100%
 
 ---
 
