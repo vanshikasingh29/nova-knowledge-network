@@ -12,6 +12,9 @@ export interface Neo4jHealthResult {
 }
 
 
+/**
+ * Check whether Neo4j is reachable.
+ */
 export async function getNeo4jHealth(): Promise<Neo4jHealthResult> {
 
     const session =
