@@ -20,6 +20,27 @@ enum VerificationStatus {
   REJECTED
 }
 
+enum KnowledgeNodeType {
+  CONCEPT
+  PERSON
+  ORGANISATION
+  TECHNOLOGY
+  TOPIC
+  CONTRIBUTION
+  CATEGORY
+  TAG
+}
+
+enum RelationshipType {
+  RELATED_TO
+  SUPPORTS
+  CONTRADICTS
+  DEPENDS_ON
+  EXTENDS
+  DERIVED_FROM
+  BELONGS_TO
+}
+
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
@@ -29,6 +50,8 @@ model User {
 
   expertProfile ExpertProfile?
   contributions KnowledgeContribution[]
+  nodes         KnowledgeNode[]
+  relationships KnowledgeRelationship[]
 }
 
 model ExpertProfile {
@@ -75,9 +98,11 @@ model KnowledgeContribution {
   authorId   String
   categoryId String?
 
-  author   User                       @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  category KnowledgeCategory?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  tags     KnowledgeContributionTag[]
+  author        User                       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  category      KnowledgeCategory?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  tags          KnowledgeContributionTag[]
+  nodes         KnowledgeNode[]
+  relationships KnowledgeRelationship[]
 }
 
 model KnowledgeContributionTag {
@@ -88,4 +113,50 @@ model KnowledgeContributionTag {
   tag          KnowledgeTag          @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([contributionId, tagId])
+}
+
+model KnowledgeNode {
+  id             String            @id @default(uuid())
+  name           String
+  description    String?
+  type           KnowledgeNodeType
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  userId         String?
+  contributionId String?
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  contribution KnowledgeContribution? @relation(fields: [contributionId], references: [id], onDelete: SetNull)
+
+  outgoingRelationships KnowledgeRelationship[] @relation("SourceNode")
+  incomingRelationships KnowledgeRelationship[] @relation("TargetNode")
+
+  @@index([type])
+  @@index([name])
+  @@index([userId])
+}
+
+model KnowledgeRelationship {
+  id             String           @id @default(uuid())
+  type           RelationshipType
+  description    String?
+  createdAt      DateTime         @default(now())
+  creatorId      String
+  contributionId String?
+  sourceNodeId   String
+  targetNodeId   String
+
+  creator User @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  contribution KnowledgeContribution? @relation(fields: [contributionId], references: [id], onDelete: SetNull)
+
+  sourceNode KnowledgeNode @relation("SourceNode", fields: [sourceNodeId], references: [id], onDelete: Cascade)
+
+  targetNode KnowledgeNode @relation("TargetNode", fields: [targetNodeId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceNodeId, targetNodeId, type])
+  @@index([sourceNodeId])
+  @@index([targetNodeId])
+  @@index([type])
 }
