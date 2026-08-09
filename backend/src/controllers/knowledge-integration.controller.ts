@@ -5,82 +5,201 @@ import {
 } from "express";
 
 import {
-    buildContributionGraph,
-    createCategoryKnowledgeNode,
-    createTagKnowledgeNode
-} from "../services/knowledge-graph.service";
+    integrateContribution,
+    rebuildContributionGraph,
+    getContributionGraph,
+    removeContributionGraph
+} from "../services/knowledge-integration.service";
 
 
-export async function buildContributionGraphController(
+/*
+|--------------------------------------------------------------------------
+| Integrate contribution
+|--------------------------------------------------------------------------
+*/
+
+export async function integrateContributionGraph(
     req: Request,
     res: Response,
     next: NextFunction
 ) {
+
     try {
-        const userId =
+
+        const creatorId =
             (req as any).user.userId;
+
+
+        const contributionId =
+            req.params.contributionId;
+
 
         const graph =
-            await buildContributionGraph(
-                req.params.id,
-                userId
+            await integrateContribution(
+
+                contributionId,
+
+                creatorId
+
             );
+
+
+        return res.status(201).json({
+
+            success: true,
+
+            message:
+                "Contribution integrated into knowledge graph",
+
+            graph
+
+        });
+
+    } catch (error) {
+
+        next(error);
+
+    }
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Rebuild contribution graph
+|--------------------------------------------------------------------------
+*/
+
+export async function rebuildGraph(
+    req: Request,
+    res: Response,
+    next: NextFunction
+) {
+
+    try {
+
+        const creatorId =
+            (req as any).user.userId;
+
+
+        const contributionId =
+            req.params.contributionId;
+
+
+        const graph =
+            await rebuildContributionGraph(
+
+                contributionId,
+
+                creatorId
+
+            );
+
 
         return res.status(200).json({
+
             success: true,
+
+            message:
+                "Contribution knowledge graph rebuilt",
+
             graph
+
         });
+
     } catch (error) {
+
         next(error);
+
     }
+
 }
 
 
-export async function createCategoryNodeController(
+/*
+|--------------------------------------------------------------------------
+| Get contribution graph
+|--------------------------------------------------------------------------
+*/
+
+export async function getGraph(
     req: Request,
     res: Response,
     next: NextFunction
 ) {
-    try {
-        const userId =
-            (req as any).user.userId;
 
-        const node =
-            await createCategoryKnowledgeNode(
-                req.params.id,
-                userId
+    try {
+
+        const contributionId =
+            req.params.contributionId;
+
+
+        const graph =
+            await getContributionGraph(
+
+                contributionId
+
             );
 
-        return res.status(201).json({
+
+        return res.status(200).json({
+
             success: true,
-            node
+
+            graph
+
         });
+
     } catch (error) {
+
         next(error);
+
     }
+
 }
 
 
-export async function createTagNodeController(
+/*
+|--------------------------------------------------------------------------
+| Remove contribution graph
+|--------------------------------------------------------------------------
+*/
+
+export async function removeGraph(
     req: Request,
     res: Response,
     next: NextFunction
 ) {
-    try {
-        const userId =
-            (req as any).user.userId;
 
-        const node =
-            await createTagKnowledgeNode(
-                req.params.id,
-                userId
+    try {
+
+        const contributionId =
+            req.params.contributionId;
+
+
+        const result =
+            await removeContributionGraph(
+
+                contributionId
+
             );
 
-        return res.status(201).json({
+
+        return res.status(200).json({
+
             success: true,
-            node
+
+            message:
+                "Contribution graph removed",
+
+            result
+
         });
+
     } catch (error) {
+
         next(error);
+
     }
+
 }

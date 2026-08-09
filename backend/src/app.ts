@@ -15,6 +15,7 @@ import knowledgeGraphRoutes from "./routes/knowledge-graph.routes";
 import knowledgeIntegrationRoutes from "./routes/knowledge-integration.routes";
 
 
+
 import {
     errorHandler
 } from "./middleware/error.middleware";
@@ -87,6 +88,7 @@ app.use(
     "/api/knowledge-integration",
     knowledgeIntegrationRoutes
 );
+
 
 app.get("/", (req, res) => {
 

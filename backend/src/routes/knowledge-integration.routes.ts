@@ -1,9 +1,10 @@
 import { Router } from "express";
 
 import {
-    buildContributionGraphController,
-    createCategoryNodeController,
-    createTagNodeController
+    integrateContributionGraph,
+    rebuildGraph,
+    getGraph,
+    removeGraph
 } from "../controllers/knowledge-integration.controller";
 
 import {
@@ -14,24 +15,69 @@ import {
 const router = Router();
 
 
-router.post(
-    "/contributions/:id/graph",
-    authenticateToken,
-    buildContributionGraphController
+/*
+|--------------------------------------------------------------------------
+| Get contribution graph
+|--------------------------------------------------------------------------
+*/
+
+router.get(
+
+    "/contributions/:contributionId",
+
+    getGraph
+
 );
 
 
+/*
+|--------------------------------------------------------------------------
+| Build contribution graph
+|--------------------------------------------------------------------------
+*/
+
 router.post(
-    "/categories/:id/graph-node",
+
+    "/contributions/:contributionId",
+
     authenticateToken,
-    createCategoryNodeController
+
+    integrateContributionGraph
+
 );
 
 
+/*
+|--------------------------------------------------------------------------
+| Rebuild contribution graph
+|--------------------------------------------------------------------------
+*/
+
 router.post(
-    "/tags/:id/graph-node",
+
+    "/contributions/:contributionId/rebuild",
+
     authenticateToken,
-    createTagNodeController
+
+    rebuildGraph
+
+);
+
+
+/*
+|--------------------------------------------------------------------------
+| Remove contribution graph
+|--------------------------------------------------------------------------
+*/
+
+router.delete(
+
+    "/contributions/:contributionId",
+
+    authenticateToken,
+
+    removeGraph
+
 );
 
 
