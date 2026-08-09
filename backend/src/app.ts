@@ -11,6 +11,8 @@ import contributionRoutes from "./routes/contribution.routes";
 import categoryRoutes from "./routes/category.routes";
 import tagRoutes from "./routes/tag.routes";
 import discoveryRoutes from "./routes/discovery.routes";
+import knowledgeGraphRoutes from "./routes/knowledge-graph.routes";
+
 
 import {
     errorHandler
@@ -75,6 +77,10 @@ app.use(
     discoveryRoutes
 );
 
+app.use(
+    "/api/knowledge-graph",
+    knowledgeGraphRoutes
+);
 
 app.get("/", (req, res) => {
 
